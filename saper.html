@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Сапёр</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#e9ece4;--panel:#f7f8f3;--text:#1f2a24;--cell:#c3cbbd;--cell-hi:#d3dacd;--open:#f4f6ef;--line:#9fa99a;--accent:#2f7d57;--bad:#e8786d;
+--n1:#2f6fe0;--n2:#1f9a55;--n3:#e0443f;--n4:#7a56d6;--n5:#d9822b;--n6:#12a1b5;--n7:#7d8580;--n8:#b0489c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121613;--panel:#1b211d;--text:#e4eae5;--cell:#37423a;--cell-hi:#47544a;--open:#1f2621;--line:#0e110f;--accent:#5fc78f;--bad:#a83a33}}
+:root[data-theme="dark"]{--bg:#121613;--panel:#1b211d;--text:#e4eae5;--cell:#37423a;--cell-hi:#47544a;--open:#1f2621;--line:#0e110f;--accent:#5fc78f;--bad:#a83a33}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+main{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 12px 28px}
+h1{margin:0;font-size:1.6rem;letter-spacing:.02em}
+button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lv{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.lv .on{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+.bar{display:flex;align-items:center;gap:14px}
+.lcd{min-width:3.2ch;text-align:center;font:700 1.5rem/1 "Courier New",monospace;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+#face{font-size:1.6rem;line-height:1;padding:6px 10px}
+.wrap{max-width:100%;overflow-x:auto}
+#board{display:grid;gap:1px;background:var(--line);padding:1px;width:max-content;border-radius:6px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.c{width:var(--s);height:var(--s);display:flex;align-items:center;justify-content:center;background:var(--cell);font-weight:700;font-size:calc(var(--s)*.58);line-height:1;cursor:pointer}
+.c:not(.o):hover{background:var(--cell-hi)}
+.c.o{background:var(--open);cursor:default}
+.c.x{background:var(--bad)}
+.n1{color:var(--n1)}.n2{color:var(--n2)}.n3{color:var(--n3)}.n4{color:var(--n4)}.n5{color:var(--n5)}.n6{color:var(--n6)}.n7{color:var(--n7)}.n8{color:var(--n8)}
+.hint{margin:0;font-size:.85rem;opacity:.7;text-align:center}
+#dot{position:fixed;left:0;top:env(safe-area-inset-top,0px);width:3px;height:3px;background:var(--text);opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<main>
+<h1>Сапёр</h1>
+<div class="lv" id="lv">
+<button data-l="easy">Новичок</button><button data-l="mid">Любитель</button><button data-l="hard">Эксперт</button>
+</div>
+<div class="bar"><span class="lcd" id="cnt">010</span><button id="face" aria-label="Новая игра">🙂</button><span class="lcd" id="tm">000</span></div>
+<div class="wrap"><div id="board"></div></div>
+<p class="hint">ЛКМ — открыть, ПКМ или долгий тап — флажок</p>
+</main>
+<i id="dot"></i>
+<script>
+const LV={easy:[9,9,10],mid:[16,16,40],hard:[30,16,99]};
+const $=s=>document.querySelector(s);
+const board=$('#board'),face=$('#face'),cnt=$('#cnt'),tm=$('#tm'),dot=$('#dot');
+let W,H,M,cur='easy',cells=[],started,over,flags,opened,timer,t0,hov=-1,cheat=false,lp=0,lpt;
+
+const pad=n=>String(Math.max(0,Math.min(999,n))).padStart(3,'0');
+function nb(i){const x=i%W,y=(i/W)|0,r=[];
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    if(!dx&&!dy)continue;const a=x+dx,b=y+dy;
+    if(a>=0&&a<W&&b>=0&&b<H)r.push(b*W+a)}
+  return r}
+
+function init(l){
+  clearInterval(timer);cur=l;[W,H,M]=LV[l];
+  const s=Math.max(20,Math.min(32,Math.floor((innerWidth-40)/W)));
+  board.style.setProperty('--s',s+'px');
+  board.style.gridTemplateColumns='repeat('+W+',var(--s))';
+  board.innerHTML='';cells=[];
+  for(let i=0;i<W*H;i++){const e=document.createElement('div');e.className='c';e.dataset.i=i;board.appendChild(e);cells.push({m:0,n:0,o:0,f:0,e})}
+  started=false;over=false;flags=0;opened=0;hov=-1;
+  face.textContent='🙂';tm.textContent='000';cnt.textContent=pad(M);
+  document.querySelectorAll('#lv button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
+  spy()}
+
+function place(s){
+  const ban=new Set([s,...nb(s)]),p=[];
+  for(let i=0;i<W*H;i++)if(!ban.has(i))p.push(i);
+  for(let i=p.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[p[i],p[j]]=[p[j],p[i]]}
+  p.slice(0,M).forEach(i=>cells[i].m=1);
+  cells.forEach((c,i)=>c.n=nb(i).filter(j=>cells[j].m).length)}
+
+function paint(i){
+  const c=cells[i],e=c.e;e.className='c';e.textContent='';
+  if(c.o){e.classList.add('o');
+    if(c.m)e.textContent='💣';
+    else if(c.n){e.textContent=c.n;e.classList.add('n'+c.n)}}
+  else if(c.f)e.textContent='🚩'}
+
+function open(i){
+  const st=[i];
+  while(st.length){const k=st.pop(),c=cells[k];
+    if(c.o||c.f)continue;
+    c.o=1;if(!c.m)opened++;paint(k);
+    if(!c.n&&!c.m)nb(k).forEach(j=>st.push(j))}}
+
+function hit(i){
+  if(over)return;const c=cells[i];
+  if(c.f||c.o)return;
+  if(c.m){lose(i);return}
+  open(i);
+  if(opened===W*H-M)win()}
+
+function click(i){
+  if(over)return;const c=cells[i];
+  if(c.o){
+    if(c.n&&nb(i).filter(j=>cells[j].f).length===c.n)nb(i).forEach(hit);
+    return}
+  if(c.f)return;
+  if(!started){started=true;place(i);t0=Date.now();timer=setInterval(tick,250)}
+  hit(i)}
+
+function flag(i){
+  if(over)return;const c=cells[i];
+  if(c.o)return;
+  c.f=c.f?0:1;flags+=c.f?1:-1;paint(i);cnt.textContent=pad(M-flags)}
+
+function tick(){tm.textContent=pad(((Date.now()-t0)/1000)|0)}
+
+function lose(i){
+  over=true;clearInterval(timer);face.textContent='😵';
+  cells.forEach((c,k)=>{
+    if(c.m&&!c.f){c.o=1;paint(k)}
+    else if(!c.m&&c.f){c.e.textContent='❌'}});
+  cells[i].e.classList.add('x')}
+
+function win(){
+  over=true;clearInterval(timer);face.textContent='😎';
+  cells.forEach((c,k)=>{if(c.m&&!c.f){c.f=1;paint(k)}});
+  flags=M;cnt.textContent=pad(0)}
+
+/* Скрытый чит: Insert включает/выключает подсказку.
+   Когда курсор над закрытой миной, в левом верхнем углу страницы появляется точка. */
+function spy(){const c=cells[hov];dot.style.opacity=(cheat&&c&&c.m&&!c.o)?1:0}
+addEventListener('keydown',e=>{if(e.code==='Insert'){e.preventDefault();cheat=!cheat;spy()}});
+board.addEventListener('pointerover',e=>{const t=e.target.closest('.c');hov=t?+t.dataset.i:-1;spy()});
+board.addEventListener('pointerleave',()=>{hov=-1;spy()});
+
+board.addEventListener('click',e=>{
+  if(lp){lp=0;return}
+  const t=e.target.closest('.c');if(t)click(+t.dataset.i)});
+board.addEventListener('contextmenu',e=>{
+  e.preventDefault();if(lp)return;
+  const t=e.target.closest('.c');if(t)flag(+t.dataset.i)});
+board.addEventListener('pointerdown',e=>{
+  if(e.pointerType!=='touch')return;
+  lp=0;const t=e.target.closest('.c');if(!t)return;
+  lpt=setTimeout(()=>{lp=1;flag(+t.dataset.i);if(navigator.vibrate)navigator.vibrate(15)},420)});
+['pointerup','pointercancel','pointerleave'].forEach(n=>board.addEventListener(n,()=>clearTimeout(lpt)));
+
+face.onclick=()=>init(cur);
+document.querySelectorAll('#lv button').forEach(b=>b.onclick=()=>init(b.dataset.l));
+init('easy');
+</script>
+</body>
+</html>
