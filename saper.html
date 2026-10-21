@@ -1,151 +1,1025 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="UTF-8">
 <title>Сапёр</title>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#e9ece4;--panel:#f7f8f3;--text:#1f2a24;--cell:#c3cbbd;--cell-hi:#d3dacd;--open:#f4f6ef;--line:#9fa99a;--accent:#2f7d57;--bad:#e8786d;
---n1:#2f6fe0;--n2:#1f9a55;--n3:#e0443f;--n4:#7a56d6;--n5:#d9822b;--n6:#12a1b5;--n7:#7d8580;--n8:#b0489c}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121613;--panel:#1b211d;--text:#e4eae5;--cell:#37423a;--cell-hi:#47544a;--open:#1f2621;--line:#0e110f;--accent:#5fc78f;--bad:#a83a33}}
-:root[data-theme="dark"]{--bg:#121613;--panel:#1b211d;--text:#e4eae5;--cell:#37423a;--cell-hi:#47544a;--open:#1f2621;--line:#0e110f;--accent:#5fc78f;--bad:#a83a33}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
-main{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 12px 28px}
-h1{margin:0;font-size:1.6rem;letter-spacing:.02em}
-button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.lv{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
-.lv .on{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
-.bar{display:flex;align-items:center;gap:14px}
-.lcd{min-width:3.2ch;text-align:center;font:700 1.5rem/1 "Courier New",monospace;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
-#face{font-size:1.6rem;line-height:1;padding:6px 10px}
-.wrap{max-width:100%;overflow-x:auto}
-#board{display:grid;gap:1px;background:var(--line);padding:1px;width:max-content;border-radius:6px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.c{width:var(--s);height:var(--s);display:flex;align-items:center;justify-content:center;background:var(--cell);font-weight:700;font-size:calc(var(--s)*.58);line-height:1;cursor:pointer}
-.c:not(.o):hover{background:var(--cell-hi)}
-.c.o{background:var(--open);cursor:default}
-.c.x{background:var(--bad)}
-.n1{color:var(--n1)}.n2{color:var(--n2)}.n3{color:var(--n3)}.n4{color:var(--n4)}.n5{color:var(--n5)}.n6{color:var(--n6)}.n7{color:var(--n7)}.n8{color:var(--n8)}
-.hint{margin:0;font-size:.85rem;opacity:.7;text-align:center}
-#dot{position:fixed;left:0;top:env(safe-area-inset-top,0px);width:3px;height:3px;background:var(--text);opacity:0;pointer-events:none}
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #e4e4e7;
+    padding: 20px;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, #e94560, #f39c12);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+  }
+  
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #e4e4e7;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  
+  .btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-2px);
+  }
+  
+  .btn.active {
+    background: linear-gradient(135deg, #e94560, #c73650);
+    border-color: #e94560;
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+  }
+  
+  .panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 15px;
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .counter {
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e94560;
+    min-width: 80px;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+  }
+  
+  .reset-btn {
+    font-size: 2rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .reset-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: rotate(180deg);
+  }
+  
+  .board {
+    display: grid;
+    gap: 2px;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  
+  .cell {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #3a3a52, #2a2a3e);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  
+  .cell:hover:not(.revealed):not(.game-over) {
+    background: linear-gradient(135deg, #4a4a62, #3a3a4e);
+    transform: scale(1.05);
+    z-index: 2;
+  }
+  
+  .cell.revealed {
+    background: rgba(255,255,255,0.05);
+    cursor: default;
+    animation: reveal 0.3s ease;
+  }
+  
+  @keyframes reveal {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  .cell.flagged::after {
+    content: '🚩';
+    font-size: 18px;
+  }
+  
+  .cell.mine {
+    background: radial-gradient(circle, #e94560, #8b0000);
+    animation: explode 0.5s ease;
+  }
+  
+  @keyframes explode {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  
+  .cell.mine::after {
+    content: '💣';
+    font-size: 18px;
+  }
+  
+  .n1 { color: #4a9eff; }
+  .n2 { color: #4ade80; }
+  .n3 { color: #ef4444; }
+  .n4 { color: #7c3aed; }
+  .n5 { color: #b91c1c; }
+  .n6 { color: #06b6d4; }
+  .n7 { color: #1f2937; }
+  .n8 { color: #6b7280; }
+  
+  .status {
+    margin-top: 15px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    min-height: 30px;
+    text-align: center;
+  }
+  
+  .status.win { color: #4ade80; text-shadow: 0 0 15px rgba(74, 222, 128, 0.6); }
+  .status.lose { color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); }
+  
+  /* X-Ray визуализация мин */
+  body.cheat-xray .cell.mine-hidden {
+    background: radial-gradient(circle, rgba(233, 69, 96, 0.35), rgba(139, 0, 0, 0.25)) !important;
+    box-shadow: 0 0 12px rgba(233, 69, 96, 0.6), inset 0 0 8px rgba(233, 69, 96, 0.3);
+    animation: cheatPulse 1.5s ease-in-out infinite;
+  }
+  
+  body.cheat-xray .cell.mine-hidden::before {
+    content: '💣';
+    font-size: 16px;
+    opacity: 0.7;
+    filter: drop-shadow(0 0 4px rgba(233, 69, 96, 0.8));
+  }
+  
+  @keyframes cheatPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(233, 69, 96, 0.6), inset 0 0 8px rgba(233, 69, 96, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.9), inset 0 0 12px rgba(233, 69, 96, 0.5); }
+  }
+  
+  .hint {
+    margin-top: 15px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+  }
+  
+  .hint kbd {
+    background: rgba(255,255,255,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+    font-family: monospace;
+    color: #e94560;
+  }
+  
+  /* ========== ЧИТ-МЕНЮ ========== */
+  .cheat-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .cheat-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  
+  .cheat-menu {
+    width: 420px;
+    max-width: 90vw;
+    max-height: 85vh;
+    background: linear-gradient(145deg, #1a1a2e, #0f0f1e);
+    border: 1px solid rgba(233, 69, 96, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(233, 69, 96, 0.2);
+    overflow: hidden;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .cheat-overlay.open .cheat-menu {
+    transform: scale(1) translateY(0);
+  }
+  
+  .cheat-header {
+    padding: 20px 24px;
+    background: linear-gradient(90deg, rgba(233, 69, 96, 0.15), rgba(243, 156, 18, 0.1));
+    border-bottom: 1px solid rgba(233, 69, 96, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .cheat-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  
+  .cheat-title-icon {
+    font-size: 1.6rem;
+    filter: drop-shadow(0 0 8px rgba(233, 69, 96, 0.6));
+  }
+  
+  .cheat-title-text {
+    background: linear-gradient(90deg, #e94560, #f39c12);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .cheat-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #e4e4e7;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .cheat-close:hover {
+    background: rgba(233, 69, 96, 0.2);
+    border-color: #e94560;
+    transform: rotate(90deg);
+  }
+  
+  .cheat-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    max-height: 60vh;
+  }
+  
+  .cheat-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+    margin: 8px 0 12px;
+    padding-left: 4px;
+  }
+  
+  .cheat-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+  
+  .cheat-item:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(233, 69, 96, 0.3);
+  }
+  
+  .cheat-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+  
+  .cheat-icon {
+    font-size: 1.4rem;
+    width: 32px;
+    text-align: center;
+  }
+  
+  .cheat-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  
+  .cheat-desc {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+  
+  /* Toggle switch */
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  
+  .toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 2px;
+    top: 2px;
+    background: #e4e4e7;
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .toggle input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #e94560, #c73650);
+    border-color: #e94560;
+    box-shadow: 0 0 12px rgba(233, 69, 96, 0.5);
+  }
+  
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
+  
+  /* Action buttons */
+  .cheat-action {
+    padding: 8px 14px;
+    background: rgba(233, 69, 96, 0.15);
+    border: 1px solid rgba(233, 69, 96, 0.3);
+    color: #e94560;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  
+  .cheat-action:hover {
+    background: rgba(233, 69, 96, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+  }
+  
+  .cheat-action:active {
+    transform: translateY(0);
+  }
+  
+  .cheat-footer {
+    padding: 14px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+  }
+  
+  .cheat-footer kbd {
+    background: rgba(255,255,255,0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.15);
+    font-family: monospace;
+    color: #e94560;
+    font-size: 0.75rem;
+  }
+  
+  .cheat-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .cheat-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px #4ade80;
+    animation: statusBlink 2s infinite;
+  }
+  
+  @keyframes statusBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  
+  /* Toast уведомление */
+  .toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(233, 69, 96, 0.95), rgba(199, 54, 80, 0.95));
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 8px 24px rgba(233, 69, 96, 0.4);
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 200;
+  }
+  
+  .toast.show {
+    transform: translateX(0);
+  }
+  
+  @media (max-width: 600px) {
+    .cell { width: 26px; height: 26px; font-size: 13px; }
+    h1 { font-size: 1.8rem; }
+    .cheat-menu { width: 95vw; }
+  }
 </style>
 </head>
 <body>
-<main>
-<h1>Сапёр</h1>
-<div class="lv" id="lv">
-<button data-l="easy">Новичок</button><button data-l="mid">Любитель</button><button data-l="hard">Эксперт</button>
+
+<h1>💣 САПЁР</h1>
+
+<div class="controls">
+  <button class="btn" data-level="easy">Легко (9×9, 10)</button>
+  <button class="btn active" data-level="medium">Средне (16×16, 40)</button>
+  <button class="btn" data-level="hard">Сложно (22×12, 60)</button>
 </div>
-<div class="bar"><span class="lcd" id="cnt">010</span><button id="face" aria-label="Новая игра">🙂</button><span class="lcd" id="tm">000</span></div>
-<div class="wrap"><div id="board"></div></div>
-<p class="hint">ЛКМ — открыть, ПКМ или долгий тап — флажок</p>
-</main>
-<i id="dot"></i>
+
+<div class="panel">
+  <div class="counter" id="mineCounter">040</div>
+  <button class="reset-btn" id="resetBtn">🙂</button>
+  <div class="counter" id="timer">000</div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="status" id="status"></div>
+<div class="hint">ЛКМ — открыть • ПКМ — флаг • <kbd>Удачной игры</kbd></div>
+
+<!-- ЧИТ-МЕНЮ -->
+<div class="cheat-overlay" id="cheatOverlay">
+  <div class="cheat-menu">
+    <div class="cheat-header">
+      <div class="cheat-title">
+        <span class="cheat-title-icon">⚙️</span>
+        <span class="cheat-title-text">CHEAT MENU</span>
+      </div>
+      <button class="cheat-close" id="cheatClose">✕</button>
+    </div>
+    
+    <div class="cheat-body">
+      <div class="cheat-section-title">Визуальные</div>
+      
+      <div class="cheat-item">
+        <div class="cheat-info">
+          <div class="cheat-icon">👁️</div>
+          <div>
+            <div class="cheat-label">X-Ray</div>
+            <div class="cheat-desc">Подсветка всех мин на поле</div>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="cheatXray">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      
+      <div class="cheat-item">
+        <div class="cheat-info">
+          <div class="cheat-icon">🔢</div>
+          <div>
+            <div class="cheat-label">Показать числа</div>
+            <div class="cheat-desc">Открыть все безопасные клетки</div>
+          </div>
+        </div>
+        <button class="cheat-action" id="cheatReveal">Применить</button>
+      </div>
+      
+      <div class="cheat-section-title">Геймплей</div>
+      
+      <div class="cheat-item">
+        <div class="cheat-info">
+          <div class="cheat-icon">🛡️</div>
+          <div>
+            <div class="cheat-label">Бессмертие</div>
+            <div class="cheat-desc">Мины больше не взрываются</div>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="cheatImmortal">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      
+      <div class="cheat-item">
+        <div class="cheat-info">
+          <div class="cheat-icon">⏸️</div>
+          <div>
+            <div class="cheat-label">Заморозка таймера</div>
+            <div class="cheat-desc">Время перестаёт идти</div>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="cheatFreeze">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      
+      <div class="cheat-item">
+        <div class="cheat-info">
+          <div class="cheat-icon">🎯</div>
+          <div>
+            <div class="cheat-label">Авто-флаги</div>
+            <div class="cheat-desc">Автоматически пометить все мины</div>
+          </div>
+        </div>
+        <button class="cheat-action" id="cheatAutoFlag">Применить</button>
+      </div>
+      
+      <div class="cheat-section-title">Быстрые действия</div>
+      
+      <div class="cheat-item">
+        <div class="cheat-info">
+          <div class="cheat-icon">🏆</div>
+          <div>
+            <div class="cheat-label">Мгновенная победа</div>
+            <div class="cheat-desc">Завершить игру с победой</div>
+          </div>
+        </div>
+        <button class="cheat-action" id="cheatWin">Активировать</button>
+      </div>
+    </div>
+    
+    <div class="cheat-footer">
+      <div class="cheat-status">
+        <span class="cheat-status-dot"></span>
+        <span>Читы активны</span>
+      </div>
+      <div><kbd>Insert</kbd> / <kbd>Esc</kbd> — закрыть</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-const LV={easy:[9,9,10],mid:[16,16,40],hard:[30,16,99]};
-const $=s=>document.querySelector(s);
-const board=$('#board'),face=$('#face'),cnt=$('#cnt'),tm=$('#tm'),dot=$('#dot');
-let W,H,M,cur='easy',cells=[],started,over,flags,opened,timer,t0,hov=-1,cheat=false,lp=0,lpt;
+const LEVELS = {
+  easy:   { rows: 9,  cols: 9,  mines: 10 },
+  medium: { rows: 16, cols: 16, mines: 40 },
+  hard:   { rows: 12, cols: 22, mines: 60 }
+};
 
-const pad=n=>String(Math.max(0,Math.min(999,n))).padStart(3,'0');
-function nb(i){const x=i%W,y=(i/W)|0,r=[];
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-    if(!dx&&!dy)continue;const a=x+dx,b=y+dy;
-    if(a>=0&&a<W&&b>=0&&b<H)r.push(b*W+a)}
-  return r}
+let currentLevel = 'medium';
+let rows, cols, totalMines;
+let board = [];
+let revealed = [];
+let flagged = [];
+let minesPlaced = false;
+let gameOver = false;
+let firstClick = true;
+let flagCount = 0;
+let revealedCount = 0;
+let timer = 0;
+let timerInterval = null;
 
-function init(l){
-  clearInterval(timer);cur=l;[W,H,M]=LV[l];
-  const s=Math.max(20,Math.min(32,Math.floor((innerWidth-40)/W)));
-  board.style.setProperty('--s',s+'px');
-  board.style.gridTemplateColumns='repeat('+W+',var(--s))';
-  board.innerHTML='';cells=[];
-  for(let i=0;i<W*H;i++){const e=document.createElement('div');e.className='c';e.dataset.i=i;board.appendChild(e);cells.push({m:0,n:0,o:0,f:0,e})}
-  started=false;over=false;flags=0;opened=0;hov=-1;
-  face.textContent='🙂';tm.textContent='000';cnt.textContent=pad(M);
-  document.querySelectorAll('#lv button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
-  spy()}
+// Читы
+const cheats = {
+  xray: false,
+  immortal: false,
+  freeze: false
+};
 
-function place(s){
-  const ban=new Set([s,...nb(s)]),p=[];
-  for(let i=0;i<W*H;i++)if(!ban.has(i))p.push(i);
-  for(let i=p.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[p[i],p[j]]=[p[j],p[i]]}
-  p.slice(0,M).forEach(i=>cells[i].m=1);
-  cells.forEach((c,i)=>c.n=nb(i).filter(j=>cells[j].m).length)}
+const boardEl = document.getElementById('board');
+const mineCounterEl = document.getElementById('mineCounter');
+const timerEl = document.getElementById('timer');
+const statusEl = document.getElementById('status');
+const resetBtn = document.getElementById('resetBtn');
+const cheatOverlay = document.getElementById('cheatOverlay');
+const toastEl = document.getElementById('toast');
 
-function paint(i){
-  const c=cells[i],e=c.e;e.className='c';e.textContent='';
-  if(c.o){e.classList.add('o');
-    if(c.m)e.textContent='💣';
-    else if(c.n){e.textContent=c.n;e.classList.add('n'+c.n)}}
-  else if(c.f)e.textContent='🚩'}
+function pad(n) { return String(n).padStart(3, '0'); }
 
-function open(i){
-  const st=[i];
-  while(st.length){const k=st.pop(),c=cells[k];
-    if(c.o||c.f)continue;
-    c.o=1;if(!c.m)opened++;paint(k);
-    if(!c.n&&!c.m)nb(k).forEach(j=>st.push(j))}}
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
 
-function hit(i){
-  if(over)return;const c=cells[i];
-  if(c.f||c.o)return;
-  if(c.m){lose(i);return}
-  open(i);
-  if(opened===W*H-M)win()}
+function initGame() {
+  const cfg = LEVELS[currentLevel];
+  rows = cfg.rows; cols = cfg.cols; totalMines = cfg.mines;
+  
+  board = Array.from({length: rows}, () => Array(cols).fill(0));
+  revealed = Array.from({length: rows}, () => Array(cols).fill(false));
+  flagged = Array.from({length: rows}, () => Array(cols).fill(false));
+  
+  minesPlaced = false;
+  gameOver = false;
+  firstClick = true;
+  flagCount = 0;
+  revealedCount = 0;
+  timer = 0;
+  
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = null;
+  
+  mineCounterEl.textContent = pad(totalMines);
+  timerEl.textContent = pad(0);
+  statusEl.textContent = '';
+  statusEl.className = 'status';
+  resetBtn.textContent = '🙂';
+  
+  renderBoard();
+}
 
-function click(i){
-  if(over)return;const c=cells[i];
-  if(c.o){
-    if(c.n&&nb(i).filter(j=>cells[j].f).length===c.n)nb(i).forEach(hit);
-    return}
-  if(c.f)return;
-  if(!started){started=true;place(i);t0=Date.now();timer=setInterval(tick,250)}
-  hit(i)}
+function placeMines(safeR, safeC) {
+  let placed = 0;
+  while (placed < totalMines) {
+    const r = Math.floor(Math.random() * rows);
+    const c = Math.floor(Math.random() * cols);
+    if (board[r][c] === -1) continue;
+    if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
+    board[r][c] = -1;
+    placed++;
+  }
+  
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (board[r][c] === -1) continue;
+      let count = 0;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && board[nr][nc] === -1) count++;
+        }
+      }
+      board[r][c] = count;
+    }
+  }
+  minesPlaced = true;
+  updateXrayVisuals();
+}
 
-function flag(i){
-  if(over)return;const c=cells[i];
-  if(c.o)return;
-  c.f=c.f?0:1;flags+=c.f?1:-1;paint(i);cnt.textContent=pad(M-flags)}
+function renderBoard() {
+  boardEl.innerHTML = '';
+  boardEl.style.gridTemplateColumns = `repeat(${cols}, 32px)`;
+  
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      
+      cell.addEventListener('click', () => handleClick(r, c));
+      cell.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        handleRightClick(r, c);
+      });
+      
+      boardEl.appendChild(cell);
+    }
+  }
+}
 
-function tick(){tm.textContent=pad(((Date.now()-t0)/1000)|0)}
+function getCell(r, c) {
+  return boardEl.children[r * cols + c];
+}
 
-function lose(i){
-  over=true;clearInterval(timer);face.textContent='😵';
-  cells.forEach((c,k)=>{
-    if(c.m&&!c.f){c.o=1;paint(k)}
-    else if(!c.m&&c.f){c.e.textContent='❌'}});
-  cells[i].e.classList.add('x')}
+function updateXrayVisuals() {
+  if (!minesPlaced) return;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = getCell(r, c);
+      if (board[r][c] === -1 && !revealed[r][c]) {
+        cell.classList.add('mine-hidden');
+      } else {
+        cell.classList.remove('mine-hidden');
+      }
+    }
+  }
+}
 
-function win(){
-  over=true;clearInterval(timer);face.textContent='😎';
-  cells.forEach((c,k)=>{if(c.m&&!c.f){c.f=1;paint(k)}});
-  flags=M;cnt.textContent=pad(0)}
+function startTimer() {
+  if (timerInterval || cheats.freeze) return;
+  timerInterval = setInterval(() => {
+    if (cheats.freeze) return;
+    timer++;
+    timerEl.textContent = pad(Math.min(timer, 999));
+  }, 1000);
+}
 
-/* Скрытый чит: Insert включает/выключает подсказку.
-   Когда курсор над закрытой миной, в левом верхнем углу страницы появляется точка. */
-function spy(){const c=cells[hov];dot.style.opacity=(cheat&&c&&c.m&&!c.o)?1:0}
-addEventListener('keydown',e=>{if(e.code==='Insert'){e.preventDefault();cheat=!cheat;spy()}});
-board.addEventListener('pointerover',e=>{const t=e.target.closest('.c');hov=t?+t.dataset.i:-1;spy()});
-board.addEventListener('pointerleave',()=>{hov=-1;spy()});
+function handleClick(r, c) {
+  if (gameOver || flagged[r][c] || revealed[r][c]) return;
+  
+  if (firstClick) {
+    placeMines(r, c);
+    firstClick = false;
+    startTimer();
+  }
+  
+  reveal(r, c);
+  checkWin();
+}
 
-board.addEventListener('click',e=>{
-  if(lp){lp=0;return}
-  const t=e.target.closest('.c');if(t)click(+t.dataset.i)});
-board.addEventListener('contextmenu',e=>{
-  e.preventDefault();if(lp)return;
-  const t=e.target.closest('.c');if(t)flag(+t.dataset.i)});
-board.addEventListener('pointerdown',e=>{
-  if(e.pointerType!=='touch')return;
-  lp=0;const t=e.target.closest('.c');if(!t)return;
-  lpt=setTimeout(()=>{lp=1;flag(+t.dataset.i);if(navigator.vibrate)navigator.vibrate(15)},420)});
-['pointerup','pointercancel','pointerleave'].forEach(n=>board.addEventListener(n,()=>clearTimeout(lpt)));
+function reveal(r, c) {
+  if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+  if (revealed[r][c] || flagged[r][c]) return;
+  
+  revealed[r][c] = true;
+  revealedCount++;
+  const cell = getCell(r, c);
+  cell.classList.add('revealed');
+  cell.classList.remove('mine-hidden');
+  
+  if (board[r][c] === -1) {
+    // Бессмертие: не взрываемся, просто открываем как обычную клетку
+    if (cheats.immortal) {
+      cell.classList.remove('mine');
+      cell.textContent = '💣';
+      cell.style.color = '#e94560';
+      return;
+    }
+    cell.classList.add('mine');
+    endGame(false);
+    return;
+  }
+  
+  if (board[r][c] > 0) {
+    cell.textContent = board[r][c];
+    cell.classList.add('n' + board[r][c]);
+  } else {
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        reveal(r + dr, c + dc);
+      }
+    }
+  }
+}
 
-face.onclick=()=>init(cur);
-document.querySelectorAll('#lv button').forEach(b=>b.onclick=()=>init(b.dataset.l));
-init('easy');
+function handleRightClick(r, c) {
+  if (gameOver || revealed[r][c]) return;
+  
+  const cell = getCell(r, c);
+  if (flagged[r][c]) {
+    flagged[r][c] = false;
+    flagCount--;
+    cell.classList.remove('flagged');
+  } else {
+    flagged[r][c] = true;
+    flagCount++;
+    cell.classList.add('flagged');
+  }
+  
+  mineCounterEl.textContent = pad(Math.max(0, totalMines - flagCount));
+}
+
+function checkWin() {
+  if (revealedCount === rows * cols - totalMines) {
+    endGame(true);
+  }
+}
+
+function endGame(won) {
+  gameOver = true;
+  if (timerInterval) clearInterval(timerInterval);
+  
+  if (won) {
+    statusEl.textContent = '🎉 Победа! Время: ' + timer + ' сек';
+    statusEl.className = 'status win';
+    resetBtn.textContent = '😎';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (board[r][c] === -1 && !flagged[r][c]) {
+          flagged[r][c] = true;
+          getCell(r, c).classList.add('flagged');
+        }
+      }
+    }
+    mineCounterEl.textContent = pad(0);
+  } else {
+    statusEl.textContent = '💥 Поражение! Попробуй ещё раз';
+    statusEl.className = 'status lose';
+    resetBtn.textContent = '😵';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (board[r][c] === -1 && !revealed[r][c]) {
+          const cell = getCell(r, c);
+          cell.classList.add('revealed', 'mine');
+          cell.classList.remove('mine-hidden');
+        }
+      }
+    }
+  }
+  
+  document.querySelectorAll('.cell').forEach(c => c.classList.add('game-over'));
+}
+
+// ========== КНОПКИ УРОВНЕЙ ==========
+document.querySelectorAll('.btn[data-level]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.btn[data-level]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentLevel = btn.dataset.level;
+    initGame();
+  });
+});
+
+resetBtn.addEventListener('click', initGame);
+
+// ========== ЧИТ-МЕНЮ ==========
+function toggleCheatMenu() {
+  cheatOverlay.classList.toggle('open');
+}
+
+document.getElementById('cheatClose').addEventListener('click', toggleCheatMenu);
+
+cheatOverlay.addEventListener('click', (e) => {
+  if (e.target === cheatOverlay) toggleCheatMenu();
+});
+
+// Клавиши
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Insert') {
+    e.preventDefault();
+    toggleCheatMenu();
+  }
+  if (e.key === 'Escape' && cheatOverlay.classList.contains('open')) {
+    toggleCheatMenu();
+  }
+});
+
+// X-Ray
+document.getElementById('cheatXray').addEventListener('change', (e) => {
+  cheats.xray = e.target.checked;
+  document.body.classList.toggle('cheat-xray', cheats.xray);
+  updateXrayVisuals();
+  showToast(cheats.xray ? '👁️ X-Ray включён' : '👁️ X-Ray выключен');
+});
+
+// Бессмертие
+document.getElementById('cheatImmortal').addEventListener('change', (e) => {
+  cheats.immortal = e.target.checked;
+  showToast(cheats.immortal ? '🛡️ Бессмертие активно' : '🛡️ Бессмертие отключено');
+});
+
+// Заморозка таймера
+document.getElementById('cheatFreeze').addEventListener('change', (e) => {
+  cheats.freeze = e.target.checked;
+  if (cheats.freeze && timerInterval) {
+    // оставляем интервал, но он не будет увеличивать timer
+  } else if (!cheats.freeze && !timerInterval && !gameOver && !firstClick) {
+    startTimer();
+  }
+  showToast(cheats.freeze ? '⏸️ Таймер заморожен' : '▶️ Таймер разморожен');
+});
+
+// Показать числа
+document.getElementById('cheatReveal').addEventListener('click', () => {
+  if (!minesPlaced) { showToast('⚠️ Сначала сделай первый клик'); return; }
+  if (gameOver) { showToast('⚠️ Игра окончена'); return; }
+  let count = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (board[r][c] !== -1 && !revealed[r][c] && !flagged[r][c]) {
+        reveal(r, c);
+        count++;
+      }
+    }
+  }
+  showToast(`🔢 Открыто клеток: ${count}`);
+  checkWin();
+});
+
+// Авто-флаги
+document.getElementById('cheatAutoFlag').addEventListener('click', () => {
+  if (!minesPlaced) { showToast('⚠️ Сначала сделай первый клик'); return; }
+  if (gameOver) { showToast('⚠️ Игра окончена'); return; }
+  let count = 0;
+  // Сначала снимаем все флаги
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (flagged[r][c]) {
+        flagged[r][c] = false;
+        getCell(r, c).classList.remove('flagged');
+      }
+    }
+  }
+  flagCount = 0;
+  // Ставим флаги на все мины
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (board[r][c] === -1 && !revealed[r][c]) {
+        flagged[r][c] = true;
+        flagCount++;
+        getCell(r, c).classList.add('flagged');
+        count++;
+      }
+    }
+  }
+  mineCounterEl.textContent = pad(Math.max(0, totalMines - flagCount));
+  showToast(`🎯 Помечено мин: ${count}`);
+});
+
+// Мгновенная победа
+document.getElementById('cheatWin').addEventListener('click', () => {
+  if (gameOver) { showToast('⚠️ Игра уже окончена'); return; }
+  if (!minesPlaced) { showToast('⚠️ Сначала сделай первый клик'); return; }
+  // Открываем все безопасные клетки
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (board[r][c] !== -1 && !revealed[r][c]) {
+        revealed[r][c] = true;
+        revealedCount++;
+        const cell = getCell(r, c);
+        cell.classList.add('revealed');
+        cell.classList.remove('mine-hidden');
+        if (board[r][c] > 0) {
+          cell.textContent = board[r][c];
+          cell.classList.add('n' + board[r][c]);
+        }
+      }
+    }
+  }
+  endGame(true);
+  showToast('🏆 Мгновенная победа!');
+});
+
+initGame();
 </script>
+
 </body>
 </html>
